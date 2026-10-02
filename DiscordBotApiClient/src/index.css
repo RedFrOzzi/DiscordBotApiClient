@@ -13,7 +13,16 @@ html {
 
   /* AUDIO VARIABLES */
   --audio-bg: #192a48;
+  --audio-waveform-color: "#06D6A0";
   /* AUDIO VARIABLES */
 
   min-height: 100%;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-y: auto;
 }
