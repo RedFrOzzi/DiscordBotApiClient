@@ -5,8 +5,13 @@ declare module "@mui/material/styles" {
     col: {
       bg_global_dark: string;
       bg_global_light: string;
+      bg_box_dark: string;
+      bg_box_light: string;
       details: string;
       accent: string;
+      border: string;
+      border_light: string;
+      text: string;
 
       wf_main: string;
       wf_played: string;
@@ -21,8 +26,13 @@ declare module "@mui/material/styles" {
     col?: {
       bg_global_dark?: string;
       bg_global_light?: string;
+      bg_box_dark?: string;
+      bg_box_light?: string;
       details?: string;
       accent?: string;
+      border?: string;
+      border_light?: string;
+      text?: string;
 
       wf_main?: string;
       wf_played?: string;

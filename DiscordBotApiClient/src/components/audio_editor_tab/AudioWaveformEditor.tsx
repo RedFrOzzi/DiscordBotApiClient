@@ -35,6 +35,7 @@ import {
   uploadExtractedAudio,
   type UploadAudioPayload,
 } from "../../api/audioExtractionQuerys";
+import { tokenStore } from "../../auth/tokenStore";
 
 const marks = [
   { value: 0 },
@@ -130,6 +131,8 @@ function AudioWaveformEditor({
     [regionsPlugin, hoverPlugin, timelinePlugin, zoomPlugin],
   );
 
+  const token = tokenStore.get();
+
   const { wavesurfer, isReady: hookIsReady } = useWavesurfer({
     container: containerRef,
     height: 200,
@@ -143,9 +146,7 @@ function AudioWaveformEditor({
     url,
     plugins,
     fetchParams: {
-      headers: {
-        // Authorization: `Bearer ${accessToken}`,
-      },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     },
   });
 

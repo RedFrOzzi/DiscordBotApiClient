@@ -10,10 +10,15 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
+import { AuthProvider } from "./auth/AuthProvider.tsx";
 
 const darkTheme = createTheme({
   palette: {
     mode: "dark",
+    primary: {
+      main: "#afd6ee",
+      contrastText: "#03041a",
+    },
     background: {
       default: "#03041a",
     },
@@ -21,7 +26,12 @@ const darkTheme = createTheme({
   col: {
     bg_global_dark: "#101b2e",
     bg_global_light: "#192946",
+    bg_box_dark: "#0f2a3d",
+    bg_box_light: "#1e3a5f",
     details: "#06D6A0",
+    border: "#255c93",
+    border_light: "#347ec7",
+    text: "#cccccc",
 
     wf_main: "#06D6A0",
     wf_played: "#047456",
@@ -48,7 +58,9 @@ createRoot(document.getElementById("root")!).render(
     <ThemeProvider theme={darkTheme}>
       <CssBaseline enableColorScheme />
       <QueryClientProvider client={queryClient}>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </ThemeProvider>

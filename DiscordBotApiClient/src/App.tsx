@@ -3,10 +3,24 @@ import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import AudioEditorTab from "./components/audio_editor_tab/AudioEditorTab";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AuthButton } from "./components/auth/AuthButton";
+import { useAuth } from "./auth/useAuth";
+import { AdminDashboard } from "./components/admin_dashboard/AdminDashboard";
+import { Typography } from "@mui/material";
+import { GuildsTab } from "./components/guilds/GuildsTab";
 
 function App() {
   const [tab, setTab] = useState("message");
+
+  const { isAdmin, isModerator, roles } = useAuth();
+  const canSeeAdmin = isAdmin || isModerator;
+
+  useEffect(() => {
+    if (!canSeeAdmin && tab === "admin") {
+      setTab("message");
+    }
+  }, [canSeeAdmin, tab]);
 
   const handleChange = (
     _event: React.SyntheticEvent<Element, Event>,
@@ -19,7 +33,7 @@ function App() {
     <div id="application">
       <Box
         sx={{
-          pb: 10,
+          pb: 5,
           pt: 2,
           width: "var(--app-width)",
           marginTop: "var(--app-tb-margin)",
@@ -34,11 +48,36 @@ function App() {
               inset 0 1px 0 rgba(255, 255, 255, 0.08)`,
         }}
       >
-        <Tabs value={tab} onChange={handleChange} centered>
-          <Tab value={"message"} label="Сообщение" />
-          <Tab value={"embed"} label="Вложенное сообщение" />
-          <Tab value={"audio"} label="Аудио" />
-        </Tabs>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
+            alignItems: "center",
+            px: 2,
+            borderBottom: "1px solid",
+            borderColor: (t) => `${t.palette.primary.main}60`,
+            boxShadow: (t) => `0 8px 16px -8px ${t.col.bg_global_light}`,
+          }}
+        >
+          <Box />
+          {!canSeeAdmin && (
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+              DISCORD BOT
+            </Typography>
+          )}
+          {canSeeAdmin && (
+            <Tabs value={tab} onChange={handleChange} centered>
+              <Tab value={"message"} label="Сообщение" />
+              <Tab value={"embed"} label="Вложенное сообщение" />
+              <Tab value={"audio"} label="Аудио" />
+              <Tab value={"guilds"} label="Каналы" />
+              <Tab value={"admin"} label="Управление" />
+            </Tabs>
+          )}
+          <Box sx={{ pr: 5, justifySelf: "end" }}>
+            <AuthButton avatarUrl="" />
+          </Box>
+        </Box>
         {tab === "message" && <div>Контент для «Сообщение»</div>}
         {tab === "embed" && <div>Контент для «Вложенное сообщение»</div>}
         <Box
@@ -57,6 +96,8 @@ function App() {
         >
           <AudioEditorTab tabName={tab} />
         </Box>
+        {tab === "guilds" && <GuildsTab />}
+        {tab === "admin" && <AdminDashboard />}
       </Box>
     </div>
   );

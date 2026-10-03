@@ -178,7 +178,7 @@ export function AudioExtractionForm({
         mx: "auto",
         mt: 2,
         p: 2,
-        border: `1px solid ${theme.col.details}`,
+        border: `1px solid ${theme.col.border_light}`,
         borderRadius: 2,
         background: `linear-gradient(180deg, ${theme.col.bg_global_light} 0%, ${theme.col.bg_global_dark} 100%)`,
       }}
