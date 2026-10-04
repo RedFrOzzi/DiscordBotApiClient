@@ -31,7 +31,7 @@ const darkTheme = createTheme({
     details: "#06D6A0",
     border: "#255c93",
     border_light: "#347ec7",
-    text: "#cccccc",
+    text: "#eaeaea",
 
     wf_main: "#06D6A0",
     wf_played: "#047456",

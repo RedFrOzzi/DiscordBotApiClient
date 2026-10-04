@@ -12,7 +12,6 @@ import {
   ListItemText,
   CircularProgress,
   Alert,
-  Divider,
 } from "@mui/material";
 import TagIcon from "@mui/icons-material/Tag";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
@@ -81,7 +80,7 @@ export function GuildsTab() {
         minWidth: 0,
       }}
     >
-      {/* -------- Left rail: guild avatars -------- */}
+      {/* Left rail: guild avatars */}
       <Box
         sx={{
           display: "flex",
@@ -98,6 +97,7 @@ export function GuildsTab() {
           if (!g.id) return null;
           const selected = g.id === selectedGuildId;
           const initials = g.name?.trim().slice(0, 2).toUpperCase() || "?";
+          const icon = g.iconUrl;
 
           return (
             <ButtonBase
@@ -116,6 +116,7 @@ export function GuildsTab() {
               }}
             >
               <Avatar
+                src={icon || undefined}
                 variant="rounded"
                 sx={{
                   width: 44,
@@ -134,7 +135,7 @@ export function GuildsTab() {
         })}
       </Box>
 
-      {/* -------- Right pane -------- */}
+      {/* Right pane */}
       <Box
         sx={{
           flex: 1,
@@ -183,7 +184,7 @@ export function GuildsTab() {
   );
 }
 
-/* ---------------- Channels list ---------------- */
+/* Channels list */
 
 function ChannelsList({ channels }: { channels: DiscordChannel[] }) {
   if (channels.length === 0) {
@@ -211,7 +212,7 @@ function ChannelsList({ channels }: { channels: DiscordChannel[] }) {
   );
 }
 
-/* ---------------- Users list ---------------- */
+/* Users list */
 
 function UsersList({ users }: { users: DiscordUser[] }) {
   if (users.length === 0) {

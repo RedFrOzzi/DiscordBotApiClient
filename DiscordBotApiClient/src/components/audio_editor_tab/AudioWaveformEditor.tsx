@@ -445,6 +445,7 @@ function AudioWaveformEditor({
           maxWidth: 520,
           mx: "auto",
           mt: 3,
+          mb: 3,
           p: 2.5,
           border: `1px solid ${waveformMainColor}`,
           borderRadius: 2,

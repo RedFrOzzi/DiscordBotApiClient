@@ -9,11 +9,12 @@ import { useAuth } from "./auth/useAuth";
 import { AdminDashboard } from "./components/admin_dashboard/AdminDashboard";
 import { Typography } from "@mui/material";
 import { GuildsTab } from "./components/guilds/GuildsTab";
+import { MessagingTab } from "./components/message_tab/MessagingTab";
 
 function App() {
   const [tab, setTab] = useState("message");
 
-  const { isAdmin, isModerator, roles } = useAuth();
+  const { isAdmin, isModerator } = useAuth();
   const canSeeAdmin = isAdmin || isModerator;
 
   useEffect(() => {
@@ -33,7 +34,7 @@ function App() {
     <div id="application">
       <Box
         sx={{
-          pb: 5,
+          pb: 0,
           pt: 2,
           width: "var(--app-width)",
           marginTop: "var(--app-tb-margin)",
@@ -68,7 +69,6 @@ function App() {
           {canSeeAdmin && (
             <Tabs value={tab} onChange={handleChange} centered>
               <Tab value={"message"} label="Сообщение" />
-              <Tab value={"embed"} label="Вложенное сообщение" />
               <Tab value={"audio"} label="Аудио" />
               <Tab value={"guilds"} label="Каналы" />
               <Tab value={"admin"} label="Управление" />
@@ -78,8 +78,7 @@ function App() {
             <AuthButton avatarUrl="" />
           </Box>
         </Box>
-        {tab === "message" && <div>Контент для «Сообщение»</div>}
-        {tab === "embed" && <div>Контент для «Вложенное сообщение»</div>}
+        {tab === "message" && <MessagingTab />}
         <Box
           sx={
             tab === "audio"

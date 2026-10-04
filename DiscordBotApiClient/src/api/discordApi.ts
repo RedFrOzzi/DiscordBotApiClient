@@ -6,6 +6,7 @@ export type DiscordGuild = {
   ownerId: string | null;
   userIds: string[] | null;
   channelIds: string[] | null;
+  iconUrl: string | null;
 };
 
 export type VoiceState = {
@@ -38,6 +39,12 @@ export type AddModeratorDto = {
   newModeratorLogin: string;
 };
 
+export type SendMessageDto = {
+  guildId: string;
+  channelId: string;
+  content: string;
+};
+
 export const discordApi = {
   getGuilds: () => apiFetch<DiscordGuild[]>("/guilds/all-guilds"),
   getUsers: () => apiFetch<DiscordUser[]>("/guild-users/users-from-db"),
@@ -47,4 +54,21 @@ export const discordApi = {
       method: "POST",
       body: JSON.stringify(dto),
     }),
+
+  sendMessage: (channelId: string, message: string) =>
+    apiFetch<void>(
+      `/bot-messages/send-message?channelId=${encodeURIComponent(channelId)}`,
+      {
+        method: "POST",
+        body: JSON.stringify(message),
+      },
+    ),
+  sendVoiceMessage: (channelId: string, message: string) =>
+    apiFetch<void>(
+      `/bot-messages/send-voice-message?channelId=${encodeURIComponent(channelId)}`,
+      {
+        method: "POST",
+        body: JSON.stringify(message),
+      },
+    ),
 };

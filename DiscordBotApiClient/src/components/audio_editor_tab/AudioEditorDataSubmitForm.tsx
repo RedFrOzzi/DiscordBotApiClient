@@ -177,6 +177,7 @@ export function AudioExtractionForm({
         maxWidth: 720,
         mx: "auto",
         mt: 2,
+        mb: 3,
         p: 2,
         border: `1px solid ${theme.col.border_light}`,
         borderRadius: 2,
