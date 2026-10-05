@@ -33,8 +33,8 @@ type SendMode = "text" | "voice" | "embed";
 
 const MODE_LABELS: Record<SendMode, string> = {
   text: "Сообщение",
-  voice: "Голосовое",
   embed: "Embed",
+  voice: "Голосовое",
 };
 
 function isModeAllowed(mode: SendMode, channel: DiscordChannel): boolean {
@@ -184,7 +184,7 @@ export function MessagingTab() {
               onClick={() => setGuildId(g.id)}
               title={g.name ?? undefined}
               sx={{
-                borderRadius: "14px",
+                borderRadius: "10px",
                 p: 0.5,
                 border: "2px solid",
                 borderColor: selected ? theme.col.details : "transparent",
@@ -200,9 +200,9 @@ export function MessagingTab() {
                 sx={{
                   width: 44,
                   height: 44,
-                  borderRadius: "10px",
-                  bgcolor: (t) => `${t.col.bg_box_light}`,
-                  color: "app.text",
+                  borderRadius: "8px",
+                  bgcolor: (t) => `${t.col.bg_300}`,
+                  color: (t) => t.col.text,
                   fontSize: 13,
                   fontWeight: 600,
                 }}
@@ -254,11 +254,14 @@ export function MessagingTab() {
                 >
                   <ListItemAvatar sx={{ minWidth: 32 }}>
                     {c.isTextChannel ? (
-                      <TagIcon fontSize="small" sx={{ color: "app.accent" }} />
+                      <TagIcon
+                        fontSize="small"
+                        sx={{ color: theme.col.text }}
+                      />
                     ) : (
                       <VolumeUpIcon
                         fontSize="small"
-                        sx={{ color: "app.accent" }}
+                        sx={{ color: theme.col.text }}
                       />
                     )}
                   </ListItemAvatar>
@@ -266,7 +269,7 @@ export function MessagingTab() {
                     primary={c.name ?? "—"}
                     slotProps={{
                       primary: {
-                        color: "col.text",
+                        color: theme.col.text,
                         sx: {
                           fontSize: 14,
                           textWrap: "nowrap",
@@ -319,13 +322,13 @@ export function MessagingTab() {
               }}
             >
               {selectedChannel.isTextChannel ? (
-                <TagIcon fontSize="small" sx={{ color: "app.accent" }} />
+                <TagIcon fontSize="small" sx={{ color: theme.col.text }} />
               ) : (
-                <VolumeUpIcon fontSize="small" sx={{ color: "app.accent" }} />
+                <VolumeUpIcon fontSize="small" sx={{ color: theme.col.text }} />
               )}
               <Typography
                 variant="subtitle1"
-                sx={{ color: "app.text", fontWeight: 600 }}
+                sx={{ color: theme.col.text, fontWeight: 600 }}
                 noWrap
               >
                 {selectedChannel.name ?? "—"}
@@ -346,14 +349,22 @@ export function MessagingTab() {
                 pl: 2,
                 "& .MuiToggleButton-root": {
                   textTransform: "none",
-                  color: "app.text",
-                  borderColor: (t) => `${t.col.border}`,
+                  backgroundColor: `${theme.col.bg_600}`,
+                  color: `${theme.col.text}80`,
+                  borderColor: `${theme.col.border_light}`,
+                  "&:hover": {
+                    bgcolor: `${theme.col.bg_700}`,
+                  },
+                  "&.Mui-disabled": {
+                    bgcolor: "transparent",
+                    borderColor: `${theme.col.border}`,
+                  },
                   "&.Mui-selected": {
-                    bgcolor: (t) => `${t.col.bg_box_light}22`,
-                    color: "app.accent",
-                    borderColor: (t) => `${t.col.border}`,
+                    bgcolor: `${theme.col.bg_800}70`,
+                    color: `${theme.col.text}`,
+                    borderColor: `${theme.col.border_light}`,
                     "&:hover": {
-                      bgcolor: (t) => `${t.col.bg_box_light}33`,
+                      bgcolor: `${theme.col.bg_800}`,
                     },
                   },
                 },
@@ -369,8 +380,8 @@ export function MessagingTab() {
                     sx={{ gap: 0.75 }}
                   >
                     {m === "text" && <ChatIcon fontSize="small" />}
-                    {m === "voice" && <MicIcon fontSize="small" />}
                     {m === "embed" && <ViewQuiltIcon fontSize="small" />}
+                    {m === "voice" && <MicIcon fontSize="small" />}
                     {MODE_LABELS[m]}
                   </ToggleButton>
                 );
@@ -435,7 +446,21 @@ export function MessagingTab() {
                 minRows={5}
                 fullWidth
                 disabled={mutation.isPending}
-                sx={{ pl: 2, flex: 1 }}
+                sx={{
+                  pl: 2,
+                  flex: 1,
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: `${theme.col.border_light}80`,
+                    },
+                    "&:hover fieldset": {
+                      borderColor: theme.col.border_light,
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: theme.col.border_light,
+                    },
+                  },
+                }}
               />
             )}
 

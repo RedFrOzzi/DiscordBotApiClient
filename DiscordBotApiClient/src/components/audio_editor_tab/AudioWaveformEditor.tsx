@@ -15,6 +15,11 @@ import {
   Container,
   Typography,
   useTheme,
+  Avatar,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from "@mui/material";
 import {
   CancelPresentation,
@@ -36,6 +41,7 @@ import {
   type UploadAudioPayload,
 } from "../../api/audioExtractionQuerys";
 import { tokenStore } from "../../auth/tokenStore";
+import { useDiscordData } from "../../api/useDiscordData";
 
 const marks = [
   { value: 0 },
@@ -47,7 +53,7 @@ const marks = [
 
 const waveformMainColor = "#06D6A0";
 const waveformPlayedColor = "#047456";
-const regionColor = "#fd003b73";
+const regionColor = "#fd003b47";
 const regionPlayingColor = "#fd003b9b";
 const cursorColor = "#f1ebec";
 const cursorMouseColor = "#040cff";
@@ -84,6 +90,11 @@ function AudioWaveformEditor({
   const [volume, setVolume] = useState(1);
   const [guildId, setGuildId] = useState("");
   const [title, setTitle] = useState("");
+
+  const { guilds } = useDiscordData();
+
+  const initials = (name: string | null | undefined) =>
+    name?.trim().slice(0, 2).toUpperCase() || "?";
 
   const theme = useTheme();
 
@@ -283,7 +294,7 @@ function AudioWaveformEditor({
 
   const handleUpload = useCallback(() => {
     if (!hasRegion) return;
-    if (!guildId.trim() || Number.isNaN(Number(guildId))) return;
+    if (!guildId.trim()) return;
     if (!title.trim()) return;
 
     uploadMutation.mutate({
@@ -338,7 +349,7 @@ function AudioWaveformEditor({
         style={{
           marginLeft: 20,
           marginRight: 20,
-          border: `1px solid ${waveformMainColor}`,
+          border: `1px solid ${theme.col.border_light}`,
           overflow: "hidden",
           backgroundColor: "var(--audio-bg)",
           borderRadius: 6,
@@ -447,7 +458,7 @@ function AudioWaveformEditor({
           mt: 3,
           mb: 3,
           p: 2.5,
-          border: `1px solid ${waveformMainColor}`,
+          border: `1px solid ${theme.col.border_light}`,
           borderRadius: 2,
           background: `linear-gradient(180deg, ${theme.col.bg_global_light} 0%, ${theme.col.bg_global_dark} 100%)`,
         }}
@@ -458,14 +469,96 @@ function AudioWaveformEditor({
           </Typography>
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <TextField
-              label="ID Канала"
-              value={guildId}
-              onChange={(e) => setGuildId(e.target.value.replace(/\D/g, ""))}
-              disabled={isUploading}
-              size="small"
-              fullWidth
-            />
+            <FormControl size="small" fullWidth disabled={isUploading}>
+              <InputLabel id="guild-select-label">Канал</InputLabel>
+              <Select
+                labelId="guild-select-label"
+                label="Канал"
+                value={guildId}
+                onChange={(e) => setGuildId(e.target.value)}
+                MenuProps={{
+                  slotProps: {
+                    paper: {
+                      sx: {
+                        bgcolor: theme.col.bg_global_light,
+                        backgroundImage: "none",
+                        border: "1px solid",
+                        borderColor: (t) => `${t.col.border}`,
+                        "& .MuiMenuItem-root": {
+                          "&:hover": {
+                            bgcolor: (t) => `${t.col.bg_box_light}65`,
+                          },
+                          "&.Mui-selected": {
+                            bgcolor: (t) => `${t.col.bg_box_light}80`,
+                            "&:hover": {
+                              bgcolor: (t) => `${t.col.bg_box_light}`,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                }}
+                renderValue={(selectedId) => {
+                  const g = guilds.find((x) => x.id === selectedId);
+                  if (!g) return "";
+                  return (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <Avatar
+                        src={g.iconUrl || undefined}
+                        variant="rounded"
+                        sx={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: "6px",
+                          fontSize: 10,
+                          fontWeight: 600,
+                          bgcolor: (t) => `${t.col.bg_box_dark}`,
+                          color: theme.col.text,
+                        }}
+                      >
+                        {initials(g.name)}
+                      </Avatar>
+                      <span>{g.name ?? "—"}</span>
+                    </Box>
+                  );
+                }}
+              >
+                {guilds.map((g) => {
+                  if (!g.id) return null;
+                  return (
+                    <MenuItem key={g.id} value={g.id}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
+                      >
+                        <Avatar
+                          src={g.iconUrl || undefined}
+                          variant="rounded"
+                          sx={{
+                            width: 26,
+                            height: 26,
+                            borderRadius: "6px",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            bgcolor: (t) => `${t.col.bg_box_light}`,
+                            color: theme.col.text,
+                          }}
+                        >
+                          {initials(g.name)}
+                        </Avatar>
+                        <span>{g.name ?? "—"}</span>
+                      </Box>
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
             <TextField
               label="Название"
               value={title}
@@ -481,7 +574,7 @@ function AudioWaveformEditor({
             <Button
               variant="contained"
               onClick={handleUpload}
-              disabled={isUploading || !hasRegion}
+              disabled={isUploading || !hasRegion || !guildId}
               startIcon={
                 isUploading ? (
                   <CircularProgress size={18} color="inherit" />

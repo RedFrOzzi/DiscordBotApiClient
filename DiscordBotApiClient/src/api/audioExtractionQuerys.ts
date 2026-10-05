@@ -1,27 +1,26 @@
 import type AudioExtractionPostQueryDto from "../models/AudioExtractionPostQueryDto";
-import type AudioExtractionGetFileQueryDto from "../models/AudioExtractionGetFileQueryDto";
 import type { AudioEditorOperationStatusDto } from "../models/AudioEditorOperationStatusDto";
-import { apiFetch } from "./client";
+import {
+  apiFetch,
+  apiSubmitExtraction,
+  type ExtractionStarted,
+} from "./client";
 
 export async function submitAudioExtractorData(
   config: AudioExtractionPostQueryDto,
-): Promise<AudioExtractionGetFileQueryDto> {
+): Promise<ExtractionStarted> {
   const path = `${import.meta.env.VITE_API_EXTRACT_AUDIO_URL}`;
-
-  return apiFetch<AudioExtractionGetFileQueryDto>(path, {
-    method: "POST",
-    body: JSON.stringify(config),
-  });
+  return apiSubmitExtraction(path, config);
 }
 
 export async function fetchOperationStatus(
   statusUrl: string,
   operationId: string,
 ): Promise<AudioEditorOperationStatusDto> {
-  const url = new URL(statusUrl);
-  url.searchParams.set("operationId", operationId);
+  const sep = statusUrl.includes("?") ? "&" : "?";
+  const url = `${statusUrl}${sep}operationId=${encodeURIComponent(operationId)}`;
 
-  return apiFetch<AudioEditorOperationStatusDto>(url.toString());
+  return apiFetch<AudioEditorOperationStatusDto>(url);
 }
 
 export interface UploadAudioPayload {

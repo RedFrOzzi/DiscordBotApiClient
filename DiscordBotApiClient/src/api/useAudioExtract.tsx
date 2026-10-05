@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type AudioExtractionPostQueryDto from "../models/AudioExtractionPostQueryDto";
-import type AudioExtractionGetFileQueryDto from "../models/AudioExtractionGetFileQueryDto";
 import type { AudioEditorOperationStatusDto } from "../models/AudioEditorOperationStatusDto";
 import {
   fetchOperationStatus,
   submitAudioExtractorData,
 } from "./audioExtractionQuerys";
+import type { ExtractionStarted } from "./client";
 
 interface UseAudioExtractOptions {
   pollIntervalMs?: number;
@@ -26,7 +26,7 @@ export function useAudioExtract({
 
   // --- Mutation: POST to begin-extraction ---
   const submitMutation = useMutation<
-    AudioExtractionGetFileQueryDto,
+    ExtractionStarted,
     Error,
     AudioExtractionPostQueryDto
   >({
@@ -69,19 +69,22 @@ export function useAudioExtract({
     [reset, submitMutation],
   );
 
-  // --- Derived: final download URL, only valid when status === "succeeded" ---
+  // Derived: final download URL, only valid when status === "succeeded"
   const downloadUrl = useMemo(() => {
     if (!operation) return null;
     const data = statusQuery.data;
     if (data?.status !== "succeeded") return null;
 
-    try {
-      const resUrl = new URL(data.getExtractedAudioUrl);
-      resUrl.searchParams.set("operationId", operation.operationId);
-      return resUrl.toString();
-    } catch {
-      return null;
-    }
+    const base = data.getExtractedAudioUrl;
+    if (!base) return null;
+
+    const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
+    const absoluteBase = /^https?:\/\//.test(base)
+      ? base
+      : `${apiBase.replace(/\/$/, "")}/${base.replace(/^\//, "")}`;
+
+    const sep = absoluteBase.includes("?") ? "&" : "?";
+    return `${absoluteBase}${sep}operationId=${encodeURIComponent(operation.operationId)}`;
   }, [operation, statusQuery.data]);
 
   const isSubmitting = submitMutation.isPending;

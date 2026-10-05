@@ -82,3 +82,69 @@ export async function apiFetchBlob(path: string): Promise<Blob> {
   if (!res.ok) throw new ApiError(res.status, await res.text());
   return res.blob();
 }
+
+export type ExtractionStarted = {
+  statusUrl: string;
+  operationId: string;
+};
+
+export async function apiSubmitExtraction(
+  path: string,
+  body: unknown,
+): Promise<ExtractionStarted> {
+  const init: RequestInit = {
+    method: "POST",
+    body: JSON.stringify(body),
+  };
+
+  let res = await rawFetch(path, init, tokenStore.get());
+
+  if (res.status === 401) {
+    try {
+      const newToken = await refreshOnce();
+      tokenStore.set(newToken);
+      res = await rawFetch(path, init, newToken);
+    } catch {
+      tokenStore.clear();
+      throw new ApiError(401, "Unauthorized");
+    }
+  }
+
+  if (!res.ok && res.status !== 202) {
+    throw new ApiError(res.status, await res.text());
+  }
+
+  const text = await res.text();
+  if (!text) {
+    throw new ApiError(
+      res.status,
+      "Extraction endpoint returned an empty body — expected { statusUrl, operationId }.",
+    );
+  }
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new ApiError(
+      res.status,
+      `Extraction endpoint returned non-JSON: ${text.slice(0, 200)}`,
+    );
+  }
+
+  const statusUrl = parsed.statusUrl;
+
+  const operationId = parsed.operationId;
+
+  if (!statusUrl || !operationId) {
+    throw new ApiError(
+      res.status,
+      `Missing statusUrl or operationId in response: ${text.slice(0, 200)}`,
+    );
+  }
+
+  return {
+    statusUrl: String(statusUrl),
+    operationId: String(operationId),
+  };
+}

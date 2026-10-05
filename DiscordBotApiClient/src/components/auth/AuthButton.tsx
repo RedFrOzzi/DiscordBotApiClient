@@ -3,7 +3,6 @@ import {
   Button,
   Menu,
   MenuItem,
-  Avatar,
   ListItemIcon,
   ListItemText,
   CircularProgress,
@@ -13,17 +12,12 @@ import {
 } from "@mui/material";
 import LoginIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
-import PersonIcon from "@mui/icons-material/Person";
-import { useAuth } from "../../auth/useAuth";
 import { LoginDialog } from "./LoginDialog";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import { AdminVerificationDialog } from "./AdminVerificationDialog";
+import { useAuth } from "../../auth/useAuth";
 
-type Props = {
-  avatarUrl?: string;
-};
-
-export function AuthButton({ avatarUrl }: Props) {
+export function AuthButton() {
   const { isAuthenticated, tryRestoreSession, logout } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
@@ -86,19 +80,6 @@ export function AuthButton({ avatarUrl }: Props) {
   return (
     <>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-        <Avatar
-          src={avatarUrl}
-          variant="rounded"
-          sx={{
-            width: 32,
-            height: 32,
-            borderRadius: "8px",
-            color: "app.text",
-          }}
-        >
-          <PersonIcon sx={{ fontSize: 18 }} />
-        </Avatar>
-
         <Button
           onClick={(e) => setMenuAnchor(e.currentTarget)}
           aria-label="account menu"
@@ -107,7 +88,7 @@ export function AuthButton({ avatarUrl }: Props) {
             px: 2,
           }}
         >
-          Настройки
+          Аккаунт
         </Button>
       </Box>
 

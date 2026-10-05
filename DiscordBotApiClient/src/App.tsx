@@ -10,15 +10,22 @@ import { AdminDashboard } from "./components/admin_dashboard/AdminDashboard";
 import { Typography } from "@mui/material";
 import { GuildsTab } from "./components/guilds/GuildsTab";
 import { MessagingTab } from "./components/message_tab/MessagingTab";
+import { AudioTracksTab } from "./components/audio_tracks/AudioTracksTab";
 
 function App() {
-  const [tab, setTab] = useState("message");
+  const [tab, setTab] = useState("home");
 
   const { isAdmin, isModerator } = useAuth();
   const canSeeAdmin = isAdmin || isModerator;
 
   useEffect(() => {
     if (!canSeeAdmin && tab === "admin") {
+      setTab("message");
+    }
+  }, [canSeeAdmin, tab]);
+
+  useEffect(() => {
+    if (canSeeAdmin && tab === "home") {
       setTab("message");
     }
   }, [canSeeAdmin, tab]);
@@ -68,16 +75,32 @@ function App() {
           )}
           {canSeeAdmin && (
             <Tabs value={tab} onChange={handleChange} centered>
+              {!canSeeAdmin && <Tab value={"home"} label="Домашняя" />}
               <Tab value={"message"} label="Сообщение" />
-              <Tab value={"audio"} label="Аудио" />
+              <Tab value={"audio"} label="Youtube" />
+              <Tab value={"audio-tracks"} label="Аудио треки" />
               <Tab value={"guilds"} label="Каналы" />
               <Tab value={"admin"} label="Управление" />
             </Tabs>
           )}
           <Box sx={{ pr: 5, justifySelf: "end" }}>
-            <AuthButton avatarUrl="" />
+            <AuthButton />
           </Box>
         </Box>
+        {!canSeeAdmin && tab === "home" && (
+          <Box
+            sx={{
+              minHeight: 500,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="h4">
+              Функционал только для модераторов
+            </Typography>
+          </Box>
+        )}
         {tab === "message" && <MessagingTab />}
         <Box
           sx={
@@ -95,6 +118,7 @@ function App() {
         >
           <AudioEditorTab tabName={tab} />
         </Box>
+        {tab === "audio-tracks" && <AudioTracksTab />}
         {tab === "guilds" && <GuildsTab />}
         {tab === "admin" && <AdminDashboard />}
       </Box>
