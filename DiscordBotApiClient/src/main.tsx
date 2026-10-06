@@ -11,6 +11,7 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { AuthProvider } from "./auth/AuthProvider.tsx";
+import { EmbedProvider } from "./components/message_tab/embed/EmbedProvider.tsx";
 
 const darkTheme = createTheme({
   palette: {
@@ -68,7 +69,9 @@ createRoot(document.getElementById("root")!).render(
       <CssBaseline enableColorScheme />
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <App />
+          <EmbedProvider>
+            <App />
+          </EmbedProvider>
         </AuthProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>

@@ -122,7 +122,7 @@ export function UpdateAudioPanelDialog({
       }}
     >
       <Box component="form" onSubmit={handleSubmit}>
-        <DialogTitle sx={{ color: "app.text" }}>
+        <DialogTitle sx={{ color: (t) => t.col.text }}>
           Создать панель аудио
         </DialogTitle>
 
@@ -133,11 +133,17 @@ export function UpdateAudioPanelDialog({
           {success && <Alert severity="success">{success}</Alert>}
 
           <TextField
-            label="Гильдия"
+            label="Канал"
             value={guildName ?? "—"}
             disabled
             fullWidth
             size="small"
+            sx={{
+              mt: 1,
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: (t) => t.col.border,
+              },
+            }}
           />
 
           <FormControl
@@ -150,13 +156,28 @@ export function UpdateAudioPanelDialog({
               labelId="panel-channel-label"
               label="Канал"
               value={channelId}
+              sx={{
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: (t) => t.col.border,
+                },
+                "&:hover .MuiOutlinedInput-notchedOutline": {
+                  borderColor: (t) => t.col.border_light,
+                },
+                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  borderColor: (t) => t.col.border_light,
+                  borderWidth: "2px",
+                },
+              }}
               onChange={(e) => setChannelId(e.target.value)}
               renderValue={(selected) => {
                 const c = textChannels.find((x) => x.id === selected);
                 if (!c) return "";
                 return (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <TagIcon fontSize="small" sx={{ color: "app.accent" }} />
+                    <TagIcon
+                      fontSize="small"
+                      sx={{ color: (t) => t.col.text }}
+                    />
                     <span>{c.name ?? "—"}</span>
                   </Box>
                 );
@@ -165,10 +186,10 @@ export function UpdateAudioPanelDialog({
                 slotProps: {
                   paper: {
                     sx: {
-                      bgcolor: "app.bg",
+                      bgcolor: (t) => t.col.bg_500,
                       backgroundImage: "none",
                       border: "1px solid",
-                      borderColor: (t) => `${t.col.border}`,
+                      borderColor: (t) => `${t.col.border_light}`,
                       maxHeight: 320,
                     },
                   },

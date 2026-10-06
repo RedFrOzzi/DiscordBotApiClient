@@ -1,4 +1,5 @@
 import { apiFetch } from "./client";
+import type { EmbedPayload } from "./embedPayload";
 
 export type DiscordGuild = {
   id: string | null;
@@ -54,6 +55,11 @@ export const discordApi = {
       method: "POST",
       body: JSON.stringify(dto),
     }),
+  updateGuildData: (guildId: string) =>
+    apiFetch<void>(
+      `/guilds/update-guild-data?guildId=${encodeURIComponent(guildId)}`,
+      { method: "POST" },
+    ),
 
   sendMessage: (channelId: string, message: string) =>
     apiFetch<void>(
@@ -71,4 +77,23 @@ export const discordApi = {
         body: JSON.stringify(message),
       },
     ),
+  sendEmbed: (channelId: string, embed: EmbedPayload) =>
+    apiFetch<void>(
+      `/bot-messages/send-embed?channelId=${encodeURIComponent(channelId)}`,
+      { method: "POST", body: JSON.stringify(embed) },
+    ),
+
+  updateUsers: (guildId: string) =>
+    apiFetch<void>(
+      `/guild-users/update-users?guildId=${encodeURIComponent(guildId)}`,
+      { method: "PATCH" },
+    ),
+
+  getUpdateProgress: () => apiFetch<number>("/guild-users/update-progress"),
+
+  cancelUpdate: () =>
+    apiFetch<void>("/guild-users/cancel-update-users", { method: "PATCH" }),
+
+  updateServer: () =>
+    apiFetch<void>("/webhooks/update-server", { method: "POST" }),
 };

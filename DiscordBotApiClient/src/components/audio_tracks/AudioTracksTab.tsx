@@ -8,6 +8,8 @@ import {
   Alert,
   Stack,
   Snackbar,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDiscordData } from "../../api/useDiscordData";
@@ -24,6 +26,11 @@ import type { AudioTrackDto } from "../../api/audioTracksApi";
 import { DeleteAudioTrackDialog } from "./DeleteAudioTrackDialog";
 import { audioTracksApi } from "../../api/audioTracksApi";
 import { ApiError } from "../../api/ApiError";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
+import IconButton from "@mui/material/IconButton";
+import { useMemo } from "react";
+import { fuzzyMatch } from "./fuzzyMatch";
 
 export function AudioTracksTab() {
   const {
@@ -41,6 +48,7 @@ export function AudioTracksTab() {
   const [guildId, setGuildId] = useState<string | null>(null);
   const [panelDialogOpen, setPanelDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [trackToRename, setTrackToRename] = useState<AudioTrackDto | null>(
     null,
   );
@@ -57,6 +65,10 @@ export function AudioTracksTab() {
       setGuildId(guilds[0]?.id ?? null);
     }
   }, [guilds, guildId]);
+
+  useEffect(() => {
+    setSearch("");
+  }, [guildId]);
 
   const shareMutation = useMutation<
     void,
@@ -89,6 +101,22 @@ export function AudioTracksTab() {
   const tracksQuery = useAudioTracks(guildId);
   const selectedGuild = guilds.find((g) => g.id === guildId) ?? null;
   const guildChannels = guildId ? (channelsByGuild.get(guildId) ?? []) : [];
+
+  const filteredTracks = useMemo(() => {
+    const all = tracksQuery.data ?? [];
+    if (!search.trim()) return all;
+
+    return all
+      .map((t) => ({
+        track: t,
+        score: fuzzyMatch(search, t.title ?? ""),
+      }))
+      .filter(
+        (x): x is { track: AudioTrackDto; score: number } => x.score !== null,
+      )
+      .sort((a, b) => b.score - a.score)
+      .map((x) => x.track);
+  }, [tracksQuery.data, search]);
 
   if (guildsLoading) {
     return (
@@ -330,12 +358,69 @@ export function AudioTracksTab() {
               py: 1.5,
               borderBottom: "1px solid",
               borderColor: (t) => `${t.col.border_light}`,
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
             }}
           >
+            <TextField
+              size="small"
+              placeholder="Поиск…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              sx={{
+                width: 240,
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: (t) => t.col.border_light,
+                  },
+                  "&:hover fieldset": {
+                    borderColor: (t) => t.col.bg_900,
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: (t) => t.col.border_light,
+                  },
+                },
+              }}
+              slotProps={{
+                input: {
+                  sx: {
+                    color: (t) => t.col.text,
+                    backgroundColor: (t) => t.col.bg_300,
+                  },
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon
+                        fontSize="small"
+                        sx={{ color: (t) => t.col.text }}
+                      />
+                    </InputAdornment>
+                  ),
+                  endAdornment: search ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setSearch("")}
+                        aria-label="clear search"
+                        edge="end"
+                        sx={{ color: (t) => t.col.text }}
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : null,
+                },
+              }}
+            />
+
             <Typography
               variant="subtitle1"
-              sx={{ color: "app.text", fontWeight: 600 }}
-              noWrap
+              sx={{
+                ml: 20,
+                color: (t) => t.col.text,
+                fontWeight: 600,
+                flexShrink: 0,
+              }}
             >
               Аудиотреки
             </Typography>
@@ -358,13 +443,24 @@ export function AudioTracksTab() {
               <Alert severity="error">Не удалось загрузить треки.</Alert>
             ) : !tracksQuery.data || tracksQuery.data.length === 0 ? (
               <Box sx={{ py: 6, textAlign: "center" }}>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: (t) => t.col.text,
+                  }}
+                >
                   В этой гильдии нет аудиотреков.
+                </Typography>
+              </Box>
+            ) : filteredTracks.length === 0 ? (
+              <Box sx={{ py: 6, textAlign: "center" }}>
+                <Typography variant="body2" color="text.secondary">
+                  Ничего не найдено по запросу «{search}».
                 </Typography>
               </Box>
             ) : (
               <Stack spacing={1}>
-                {tracksQuery.data.map((t) => (
+                {filteredTracks.map((t) => (
                   <AudioTrackRowWithBlob
                     key={t.key}
                     track={t}

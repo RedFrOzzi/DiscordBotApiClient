@@ -28,6 +28,9 @@ import { useMutation } from "@tanstack/react-query";
 import { useDiscordData } from "../../api/useDiscordData";
 import { ApiError } from "../../api/ApiError";
 import { discordApi, type DiscordChannel } from "../../api/discordApi";
+import { EmbedBuilder } from "./embed/EmbedBuilder";
+import { useEmbed } from "./embed/EmbedProvider";
+import { buildEmbedPayload, hasEmbedContent } from "../../api/embedPayload";
 
 type SendMode = "text" | "voice" | "embed";
 
@@ -50,6 +53,7 @@ function firstAllowedMode(channel: DiscordChannel): SendMode {
 
 export function MessagingTab() {
   const { guilds, channelsByGuild, isLoading, isError } = useDiscordData();
+  const { embed } = useEmbed();
 
   const [guildId, setGuildId] = useState<string | null>(null);
   const [channelId, setChannelId] = useState<string | null>(null);
@@ -103,6 +107,15 @@ export function MessagingTab() {
   const mutation = useMutation<void, Error, void>({
     mutationFn: () => {
       if (!selectedChannel) throw new Error("no channel");
+
+      if (mode === "embed") {
+        if (!hasEmbedContent(embed)) throw new Error("empty embed");
+        return discordApi.sendEmbed(
+          selectedChannel.id,
+          buildEmbedPayload(embed),
+        );
+      }
+
       const trimmed = content.trim();
       if (!trimmed) throw new Error("empty message");
 
@@ -116,7 +129,7 @@ export function MessagingTab() {
     },
     onSuccess: () => {
       setFeedback({ kind: "success", text: "Отправлено." });
-      setContent("");
+      if (mode !== "embed") setContent("");
     },
     onError: (err) => {
       const text =
@@ -151,13 +164,13 @@ export function MessagingTab() {
     );
   }
 
-  const embedNotReady = mode === "embed";
-  const canSend =
-    !!selectedChannel &&
-    isModeAllowed(mode, selectedChannel) &&
-    !embedNotReady &&
-    content.trim().length > 0 &&
-    !mutation.isPending;
+  const canSend = (() => {
+    if (!selectedChannel) return false;
+    if (!isModeAllowed(mode, selectedChannel)) return false;
+    if (mutation.isPending) return false;
+    if (mode === "embed") return hasEmbedContent(embed);
+    return content.trim().length > 0;
+  })();
 
   return (
     <Box sx={{ display: "flex", height: "100%", minHeight: 420, minWidth: 0 }}>
@@ -417,18 +430,19 @@ export function MessagingTab() {
               <Box
                 sx={{
                   flex: 1,
-                  minHeight: 120,
-                  border: "1px dashed",
-                  borderColor: (t) => `${t.col.border}55`,
-                  borderRadius: 2,
+                  minHeight: 0,
+                  mx: 2,
+                  py: 3,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  overflowY: "auto",
+                  border: "1px solid",
+                  borderColor: (t) => `${t.col.border_light}`,
+                  borderRadius: 1,
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
-                  Конструктор embed появится позже.
-                </Typography>
+                <EmbedBuilder />
               </Box>
             ) : (
               <TextField

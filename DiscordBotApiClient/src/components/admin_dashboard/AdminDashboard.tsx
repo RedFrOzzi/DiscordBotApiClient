@@ -11,6 +11,10 @@ import { discordApi, type AddModeratorDto } from "../../api/discordApi";
 import { ApiError } from "../../api/ApiError";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
+import { UpdateGuildDataSection } from "./UpdateGuildDataSection";
+import { useAuth } from "../../auth/useAuth";
+import { UpdateUsersSection } from "./UpdateUsersSection";
+import { UpdateServerSection } from "./UpdateServerSection";
 
 const emptyForm: AddModeratorDto = {
   login: "",
@@ -36,11 +40,30 @@ function errorMessage(err: unknown): string {
 }
 
 export function AdminDashboard() {
+  const { isAdmin } = useAuth();
+
   return (
     <Box sx={{ p: 3 }}>
       <CreateModeratorSection />
       <SectionDivider />
-      <Box sx={{ height: 50 }}></Box>
+      {isAdmin && (
+        <>
+          <UpdateGuildDataSection />
+          <SectionDivider />
+        </>
+      )}
+      {isAdmin && (
+        <>
+          <UpdateUsersSection />
+          <SectionDivider />
+        </>
+      )}
+      {isAdmin && (
+        <>
+          <UpdateServerSection />
+          <SectionDivider />
+        </>
+      )}
     </Box>
   );
 }
@@ -50,7 +73,7 @@ function SectionDivider() {
     <Divider
       sx={{
         my: 3,
-        borderColor: (t) => `${t.col.border}`,
+        borderColor: (t) => t.col.border_light,
       }}
     />
   );
@@ -95,9 +118,9 @@ function CreateModeratorSection() {
     <Box>
       <Typography
         variant="h6"
-        sx={{ color: "app.text", mb: 2, fontSize: "1.05rem" }}
+        sx={{ color: (t) => t.col.text, mb: 2, fontSize: "1.05rem" }}
       >
-        Создать модератора
+        Назначить модератора
       </Typography>
 
       <Box
