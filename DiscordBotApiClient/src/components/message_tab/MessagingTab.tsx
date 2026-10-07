@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Avatar,
@@ -24,23 +24,37 @@ import SendIcon from "@mui/icons-material/Send";
 import ChatIcon from "@mui/icons-material/Chat";
 import MicIcon from "@mui/icons-material/Mic";
 import ViewQuiltIcon from "@mui/icons-material/ViewQuilt";
+import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
 import { useMutation } from "@tanstack/react-query";
 import { useDiscordData } from "../../api/useDiscordData";
 import { ApiError } from "../../api/ApiError";
-import { discordApi, type DiscordChannel } from "../../api/discordApi";
+import {
+  discordApi,
+  type DiscordChannel,
+  type DiscordUser,
+} from "../../api/discordApi";
 import { EmbedBuilder } from "./embed/EmbedBuilder";
 import { useEmbed } from "./embed/EmbedProvider";
 import { buildEmbedPayload, hasEmbedContent } from "../../api/embedPayload";
+import { StreamVoiceComposer } from "./voice_message/StreamVoiceComposer";
+import { useVoiceStates } from "../../api/useVoiceStates";
+import { VoiceUserAvatar } from "./VoiceUserAvatar";
 
-type SendMode = "text" | "voice" | "embed";
+type SendMode = "text" | "voice" | "embed" | "stream";
 
 const MODE_LABELS: Record<SendMode, string> = {
   text: "Сообщение",
   embed: "Embed",
   voice: "Голосовое",
+  stream: "Text to speech",
 };
 
-function isModeAllowed(mode: SendMode, channel: DiscordChannel): boolean {
+function isModeAllowed(
+  mode: SendMode,
+  channel: DiscordChannel | null,
+): boolean {
+  if (mode === "stream") return true; // needs guild, not channel
+  if (!channel) return false;
   if (mode === "text") return !!channel.isTextChannel;
   if (mode === "voice") return channel.isTextChannel === false;
   if (mode === "embed") return !!channel.isTextChannel;
@@ -52,7 +66,8 @@ function firstAllowedMode(channel: DiscordChannel): SendMode {
 }
 
 export function MessagingTab() {
-  const { guilds, channelsByGuild, isLoading, isError } = useDiscordData();
+  const { guilds, channelsByGuild, userById, isLoading, isError } =
+    useDiscordData();
   const { embed } = useEmbed();
 
   const [guildId, setGuildId] = useState<string | null>(null);
@@ -84,6 +99,34 @@ export function MessagingTab() {
 
   const channels = guildId ? (channelsByGuild.get(guildId) ?? []) : [];
 
+  const { data: voiceStates } = useVoiceStates(guildId);
+
+  const voiceByChannel = useMemo(() => {
+    const map = new Map<
+      string,
+      Array<{ user: DiscordUser; muted: boolean; deafened: boolean }>
+    >();
+    if (!voiceStates) return map;
+
+    for (const vs of voiceStates) {
+      if (!vs.userId || !vs.channelId) continue;
+
+      const user = userById.get(vs.userId);
+      if (!user) continue;
+
+      if (!channels.some((c) => c.id === vs.channelId)) continue;
+
+      const arr = map.get(vs.channelId) ?? [];
+      arr.push({
+        user,
+        muted: !!vs.isMuted,
+        deafened: !!vs.isDeafened,
+      });
+      map.set(vs.channelId, arr);
+    }
+    return map;
+  }, [voiceStates, userById, channels]);
+
   // Reset channel + mode + content when guild changes
   useEffect(() => {
     setChannelId(null);
@@ -98,6 +141,7 @@ export function MessagingTab() {
 
   // Auto-switch to an allowed mode when channel changes
   useEffect(() => {
+    if (mode === "stream") return;
     if (!selectedChannel) return;
     if (!isModeAllowed(mode, selectedChannel)) {
       setMode(firstAllowedMode(selectedChannel));
@@ -245,51 +289,85 @@ export function MessagingTab() {
             </Typography>
           </Box>
         ) : (
-          <List dense disablePadding>
+          <List dense disablePadding sx={{ px: 1 }}>
             {channels.map((c) => {
               const selected = c.id === channelId;
+              const isVoice = c.isTextChannel === false;
+              const voiceUsers = isVoice
+                ? (voiceByChannel.get(c.id) ?? [])
+                : [];
+
               return (
                 <ListItem
                   key={c.id}
                   disableGutters
                   onClick={() => setChannelId(c.id)}
                   sx={{
+                    display: "block",
                     px: 1.5,
                     py: 0.75,
+                    mb: 0.75,
                     cursor: "pointer",
-                    bgcolor: selected
-                      ? (t) => `${t.col.bg_box_dark}65`
-                      : "transparent",
-                    "&:hover": {
-                      bgcolor: (t) => `${t.col.bg_box_light}70`,
-                    },
+                    borderRadius: 1,
+                    border: "1px solid",
+                    borderColor: (t) => t.col.border_light,
+                    bgcolor: (t) => (isVoice ? t.col.bg_400 : t.col.bg_500),
+                    transition: "filter .15s, box-shadow .15s",
+                    "&:hover": { filter: "brightness(1.15)" },
+                    ...(selected && {
+                      boxShadow: (t) => `inset 0 0 0 2px ${t.col.details}`,
+                    }),
                   }}
                 >
-                  <ListItemAvatar sx={{ minWidth: 32 }}>
-                    {c.isTextChannel ? (
-                      <TagIcon
-                        fontSize="small"
-                        sx={{ color: theme.col.text }}
-                      />
-                    ) : (
-                      <VolumeUpIcon
-                        fontSize="small"
-                        sx={{ color: theme.col.text }}
-                      />
-                    )}
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={c.name ?? "—"}
-                    slotProps={{
-                      primary: {
-                        color: theme.col.text,
-                        sx: {
-                          fontSize: 14,
-                          textWrap: "nowrap",
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <ListItemAvatar sx={{ minWidth: 32 }}>
+                      {c.isTextChannel ? (
+                        <TagIcon
+                          fontSize="small"
+                          sx={{ color: theme.col.text }}
+                        />
+                      ) : (
+                        <VolumeUpIcon
+                          fontSize="small"
+                          sx={{ color: theme.col.text }}
+                        />
+                      )}
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={c.name ?? "—"}
+                      slotProps={{
+                        primary: {
+                          color: theme.col.text,
+                          sx: {
+                            fontSize: 14,
+                            textWrap: "nowrap",
+                          },
                         },
-                      },
-                    }}
-                  />
+                      }}
+                    />
+                  </Box>
+
+                  {isVoice && voiceUsers.length > 0 && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        flexWrap: "wrap",
+                        gap: 0.75,
+                        mt: 0.75,
+                        pl: 1,
+                      }}
+                    >
+                      {voiceUsers.map(({ user, muted, deafened }) => (
+                        <VoiceUserAvatar
+                          key={user.id}
+                          user={user}
+                          muted={muted}
+                          deafened={deafened}
+                        />
+                      ))}
+                    </Box>
+                  )}
                 </ListItem>
               );
             })}
@@ -310,122 +388,130 @@ export function MessagingTab() {
           gap: 2,
         }}
       >
-        {!selectedChannel ? (
+        {mode !== "stream" && selectedChannel && (
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}
+          >
+            {selectedChannel.isTextChannel ? (
+              <TagIcon fontSize="small" sx={{ color: "app.accent" }} />
+            ) : (
+              <VolumeUpIcon fontSize="small" sx={{ color: "app.accent" }} />
+            )}
+            <Typography
+              variant="subtitle1"
+              sx={{ color: (t) => t.col.text, fontWeight: 600 }}
+              noWrap
+            >
+              {selectedChannel.name ?? "—"}
+            </Typography>
+          </Box>
+        )}
+        <ToggleButtonGroup
+          value={mode}
+          exclusive
+          onChange={(_e, v: SendMode | null) => {
+            if (v) {
+              setMode(v);
+              setFeedback(null);
+            }
+          }}
+          size="small"
+          sx={{
+            pl: 2,
+            "& .MuiToggleButton-root": {
+              textTransform: "none",
+              backgroundColor: `${theme.col.bg_600}`,
+              color: `${theme.col.text}80`,
+              borderColor: `${theme.col.border_light}`,
+              "&:hover": {
+                bgcolor: `${theme.col.bg_700}`,
+              },
+              "&.Mui-disabled": {
+                bgcolor: "transparent",
+                borderColor: `${theme.col.border}`,
+              },
+              "&.Mui-selected": {
+                bgcolor: `${theme.col.bg_800}70`,
+                color: `${theme.col.text}`,
+                borderColor: `${theme.col.border_light}`,
+                "&:hover": {
+                  bgcolor: `${theme.col.bg_800}`,
+                },
+              },
+            },
+          }}
+        >
+          {(Object.keys(MODE_LABELS) as SendMode[]).map((m) => {
+            const allowed =
+              m === "stream" ? true : isModeAllowed(m, selectedChannel);
+
+            const disabledTooltip =
+              m === "stream"
+                ? ""
+                : !selectedChannel
+                  ? "Выберите канал слева"
+                  : m === "text" || m === "embed"
+                    ? "Только для текстовых каналов"
+                    : "Только для голосовых каналов";
+
+            const button = (
+              <ToggleButton
+                key={m}
+                value={m}
+                disabled={!allowed}
+                sx={{ gap: 0.75 }}
+              >
+                {m === "text" && <ChatIcon fontSize="small" />}
+                {m === "embed" && <ViewQuiltIcon fontSize="small" />}
+                {m === "voice" && <MicIcon fontSize="small" />}
+                {m === "stream" && <RecordVoiceOverIcon fontSize="small" />}
+                {MODE_LABELS[m]}
+              </ToggleButton>
+            );
+            return allowed ? (
+              button
+            ) : (
+              <Tooltip
+                key={m}
+                title={disabledTooltip}
+                slotProps={{
+                  tooltip: {
+                    sx: {
+                      color: theme.col.text,
+                      backgroundColor: theme.col.bg_global_light,
+                      border: `1px solid ${theme.col.border}`,
+                    },
+                  },
+                }}
+              >
+                <span>{button}</span>
+              </Tooltip>
+            );
+          })}
+        </ToggleButtonGroup>
+
+        <Divider sx={{ borderColor: (t) => `${t.col.border_light}` }} />
+
+        {/* Content area */}
+        {mode === "stream" ? (
+          <StreamVoiceComposer guildId={guildId!} />
+        ) : !selectedChannel ? (
           <Box
             sx={{
               flex: 1,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              textAlign: "center",
+              px: 3,
             }}
           >
-            <Typography variant="body2" sx={{ color: theme.col.text }}>
-              Выберите канал
+            <Typography variant="body2" sx={{ color: (t) => t.col.text }}>
+              Выберите канал слева, чтобы отправить сообщение.
             </Typography>
           </Box>
         ) : (
           <>
-            <Box
-              sx={{
-                pl: 2,
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                minWidth: 0,
-              }}
-            >
-              {selectedChannel.isTextChannel ? (
-                <TagIcon fontSize="small" sx={{ color: theme.col.text }} />
-              ) : (
-                <VolumeUpIcon fontSize="small" sx={{ color: theme.col.text }} />
-              )}
-              <Typography
-                variant="subtitle1"
-                sx={{ color: theme.col.text, fontWeight: 600 }}
-                noWrap
-              >
-                {selectedChannel.name ?? "—"}
-              </Typography>
-            </Box>
-
-            <ToggleButtonGroup
-              value={mode}
-              exclusive
-              onChange={(_e, v: SendMode | null) => {
-                if (v) {
-                  setMode(v);
-                  setFeedback(null);
-                }
-              }}
-              size="small"
-              sx={{
-                pl: 2,
-                "& .MuiToggleButton-root": {
-                  textTransform: "none",
-                  backgroundColor: `${theme.col.bg_600}`,
-                  color: `${theme.col.text}80`,
-                  borderColor: `${theme.col.border_light}`,
-                  "&:hover": {
-                    bgcolor: `${theme.col.bg_700}`,
-                  },
-                  "&.Mui-disabled": {
-                    bgcolor: "transparent",
-                    borderColor: `${theme.col.border}`,
-                  },
-                  "&.Mui-selected": {
-                    bgcolor: `${theme.col.bg_800}70`,
-                    color: `${theme.col.text}`,
-                    borderColor: `${theme.col.border_light}`,
-                    "&:hover": {
-                      bgcolor: `${theme.col.bg_800}`,
-                    },
-                  },
-                },
-              }}
-            >
-              {(Object.keys(MODE_LABELS) as SendMode[]).map((m) => {
-                const allowed = isModeAllowed(m, selectedChannel);
-                const button = (
-                  <ToggleButton
-                    key={m}
-                    value={m}
-                    disabled={!allowed}
-                    sx={{ gap: 0.75 }}
-                  >
-                    {m === "text" && <ChatIcon fontSize="small" />}
-                    {m === "embed" && <ViewQuiltIcon fontSize="small" />}
-                    {m === "voice" && <MicIcon fontSize="small" />}
-                    {MODE_LABELS[m]}
-                  </ToggleButton>
-                );
-                return allowed ? (
-                  button
-                ) : (
-                  <Tooltip
-                    key={m}
-                    title={
-                      m === "voice"
-                        ? "Только для голосовых каналов"
-                        : "Только для текстовых каналов"
-                    }
-                    slotProps={{
-                      tooltip: {
-                        sx: {
-                          color: theme.col.text,
-                          backgroundColor: theme.col.bg_global_light,
-                          border: `1px solid ${theme.col.border}`,
-                        },
-                      },
-                    }}
-                  >
-                    <span>{button}</span>
-                  </Tooltip>
-                );
-              })}
-            </ToggleButtonGroup>
-
-            <Divider sx={{ borderColor: (t) => `${t.col.border_light}` }} />
-
             {mode === "embed" ? (
               <Box
                 sx={{

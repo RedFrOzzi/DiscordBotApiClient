@@ -46,6 +46,26 @@ export type SendMessageDto = {
   content: string;
 };
 
+export type TTSOptionsPayload = {
+  voice: string;
+  pitch: string;
+  rate: string;
+  volume: string;
+};
+
+export type StreamVoiceDto = {
+  guildId: string;
+  message: string;
+  options: TTSOptionsPayload;
+};
+
+export type VoiceStateDto = {
+  userId: string | null;
+  channelId: string | null;
+  isDeafened: boolean | null;
+  isMuted: boolean | null;
+};
+
 export const discordApi = {
   getGuilds: () => apiFetch<DiscordGuild[]>("/guilds/all-guilds"),
   getUsers: () => apiFetch<DiscordUser[]>("/guild-users/users-from-db"),
@@ -96,4 +116,20 @@ export const discordApi = {
 
   updateServer: () =>
     apiFetch<void>("/webhooks/update-server", { method: "POST" }),
+
+  streamVoice: (dto: StreamVoiceDto) =>
+    apiFetch<void>("/bot-messages/stream-voice", {
+      method: "POST",
+      body: JSON.stringify(dto),
+    }),
+  stopVoiceStream: (guildId: string) =>
+    apiFetch<void>("/bot-messages/stop-voice-stream", {
+      method: "POST",
+      body: JSON.stringify(guildId),
+    }),
+
+  getVoiceStates: (guildId: string) =>
+    apiFetch<VoiceStateDto[]>(
+      `/guild-users/users-voice-states?guildId=${encodeURIComponent(guildId)}`,
+    ),
 };

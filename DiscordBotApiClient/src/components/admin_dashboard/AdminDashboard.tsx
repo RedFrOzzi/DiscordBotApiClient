@@ -139,6 +139,19 @@ function CreateModeratorSection() {
           required
           disabled={mutation.isPending}
           fullWidth
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: (t) => `${t.col.border_light}90`,
+              },
+              "&:hover fieldset": {
+                borderColor: (t) => t.col.border_light,
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: (t) => t.col.border_light,
+              },
+            },
+          }}
         />
         <TextField
           label="Ваш пароль"
@@ -149,6 +162,19 @@ function CreateModeratorSection() {
           required
           disabled={mutation.isPending}
           fullWidth
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: (t) => `${t.col.border_light}90`,
+              },
+              "&:hover fieldset": {
+                borderColor: (t) => t.col.border_light,
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: (t) => t.col.border_light,
+              },
+            },
+          }}
         />
         <TextField
           label="Логин нового модератора"
@@ -158,6 +184,19 @@ function CreateModeratorSection() {
           required
           disabled={mutation.isPending}
           fullWidth
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: (t) => `${t.col.border_light}90`,
+              },
+              "&:hover fieldset": {
+                borderColor: (t) => t.col.border_light,
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: (t) => t.col.border_light,
+              },
+            },
+          }}
         />
 
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>

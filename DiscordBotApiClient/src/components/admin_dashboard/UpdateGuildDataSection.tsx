@@ -120,6 +120,17 @@ export function UpdateGuildDataSection() {
                 </Box>
               );
             }}
+            sx={{
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: (t) => `${t.col.border_light}90`,
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: (t) => t.col.border_light,
+              },
+              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                borderColor: (t) => t.col.border_light,
+              },
+            }}
             MenuProps={{
               slotProps: {
                 paper: {
