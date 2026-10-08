@@ -2,6 +2,7 @@ import type AudioExtractionPostQueryDto from "../models/AudioExtractionPostQuery
 import type { AudioEditorOperationStatusDto } from "../models/AudioEditorOperationStatusDto";
 import {
   apiFetch,
+  apiFetchBlob,
   apiSubmitExtraction,
   type ExtractionStarted,
 } from "./client";
@@ -63,6 +64,30 @@ export async function uploadExtractedAudio(
   form.append("EndsAt.IsTillTheEnd", String(payload.endsAt.isTillTheEnd));
 
   await apiFetch<void>(`${import.meta.env.VITE_API_UPLOAD_AUDIO_URL}`, {
+    method: "POST",
+    body: form,
+  });
+}
+
+export async function createAudioFragment(
+  payload: UploadAudioPayload,
+): Promise<Blob> {
+  const form = new FormData();
+  form.append("OperationId", payload.operationId);
+  form.append("GuildId", payload.guildId);
+  form.append("Title", payload.title);
+  form.append("StartsAt.Hours", String(payload.startsAt.hours));
+  form.append("StartsAt.Minutes", String(payload.startsAt.minutes));
+  form.append("StartsAt.Seconds", String(payload.startsAt.seconds));
+  form.append("StartsAt.Miliseconds", String(payload.startsAt.miliseconds));
+  form.append("StartsAt.IsTillTheEnd", String(payload.startsAt.isTillTheEnd));
+  form.append("EndsAt.Hours", String(payload.endsAt.hours));
+  form.append("EndsAt.Minutes", String(payload.endsAt.minutes));
+  form.append("EndsAt.Seconds", String(payload.endsAt.seconds));
+  form.append("EndsAt.Miliseconds", String(payload.endsAt.miliseconds));
+  form.append("EndsAt.IsTillTheEnd", String(payload.endsAt.isTillTheEnd));
+
+  return apiFetchBlob("yt-extractor/create-fragment", {
     method: "POST",
     body: form,
   });

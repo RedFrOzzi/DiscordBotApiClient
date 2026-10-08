@@ -65,14 +65,17 @@ export async function apiFetch<T>(
   }
 }
 
-export async function apiFetchBlob(path: string): Promise<Blob> {
-  let res = await rawFetch(path, {}, tokenStore.get());
+export async function apiFetchBlob(
+  path: string,
+  init: RequestInit = {},
+): Promise<Blob> {
+  let res = await rawFetch(path, init, tokenStore.get());
 
   if (res.status === 401) {
     try {
       const newToken = await refreshOnce();
       tokenStore.set(newToken);
-      res = await rawFetch(path, {}, newToken);
+      res = await rawFetch(path, init, newToken);
     } catch {
       tokenStore.clear();
       throw new ApiError(401, "Unauthorized");

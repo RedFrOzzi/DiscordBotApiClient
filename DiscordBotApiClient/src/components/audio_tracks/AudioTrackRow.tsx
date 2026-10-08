@@ -16,10 +16,12 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ShareIcon from "@mui/icons-material/Share";
 import EditIcon from "@mui/icons-material/Edit";
 import type { DiscordGuild } from "../../api/discordApi";
+import DownloadIcon from "@mui/icons-material/Download";
 
 type Props = {
   title: string;
   url: string;
+  blob?: Blob;
   /** Guilds available to share into (for the dropdown). */
   guilds?: DiscordGuild[];
   /** Guild this track currently belongs to — excluded from share menu. */
@@ -36,6 +38,7 @@ const TITLE_WIDTH = 220;
 export function AudioTrackRow({
   title,
   url,
+  blob,
   guilds = [],
   currentGuildId,
   onEnded,
@@ -62,6 +65,19 @@ export function AudioTrackRow({
     el.pause();
     el.currentTime = 0;
     setIsPlaying(false);
+  };
+
+  const handleDownload = () => {
+    if (!blob) return;
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = title;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   useEffect(() => {
@@ -322,6 +338,44 @@ export function AudioTrackRow({
               aria-label="share"
             >
               <ShareIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+
+        <Tooltip
+          title="Скачать"
+          arrow
+          slotProps={{
+            arrow: {
+              sx: {
+                color: (t) => t.col.bg_600,
+                "&:before": {
+                  border: "1px solid",
+                  borderColor: (t) => t.col.border_light,
+                },
+              },
+            },
+            tooltip: {
+              sx: {
+                backgroundColor: (t) => t.col.bg_600,
+                color: (t) => t.col.text,
+                border: "1px solid",
+                borderColor: (t) => t.col.border_light,
+              },
+            },
+          }}
+        >
+          <span>
+            <IconButton
+              size="small"
+              onClick={handleDownload}
+              sx={{
+                color: (t) => t.col.text,
+                "&:hover": { color: (t) => t.col.bg_900 },
+              }}
+              aria-label="download"
+            >
+              <DownloadIcon fontSize="small" />
             </IconButton>
           </span>
         </Tooltip>

@@ -20,6 +20,7 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  Tooltip,
 } from "@mui/material";
 import {
   CancelPresentation,
@@ -38,10 +39,12 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useMutation } from "@tanstack/react-query";
 import {
   uploadExtractedAudio,
+  createAudioFragment,
   type UploadAudioPayload,
 } from "../../api/audioExtractionQuerys";
 import { tokenStore } from "../../auth/tokenStore";
 import { useDiscordData } from "../../api/useDiscordData";
+import DownloadIcon from "@mui/icons-material/Download";
 
 const marks = [
   { value: 0 },
@@ -54,7 +57,7 @@ const marks = [
 const waveformMainColor = "#06D6A0";
 const waveformPlayedColor = "#047456";
 const regionColor = "#fd003b47";
-const regionPlayingColor = "#fd003b9b";
+const regionPlayingColor = "rgba(253, 0, 59, 0.13)";
 const cursorColor = "#f1ebec";
 const cursorMouseColor = "#040cff";
 const textColor = "#cccccc";
@@ -333,6 +336,53 @@ function AudioWaveformEditor({
     return () => clearTimeout(t);
   }, [uploadMutation]);
 
+  //Download Audio Track handlers
+  const downloadMutation = useMutation<Blob, Error, UploadAudioPayload>({
+    mutationFn: createAudioFragment,
+    onSuccess: (blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${title.trim()}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    },
+  });
+
+  const handleDownloadFragment = useCallback(() => {
+    if (!hasRegion) return;
+    if (!title.trim()) return;
+
+    downloadMutation.mutate({
+      operationId,
+      guildId: guildId.trim() || "0",
+      title: title.trim(),
+      startsAt: {
+        hours: sectionTimestamp.startHours,
+        minutes: sectionTimestamp.startMinutes,
+        seconds: sectionTimestamp.startSeconds,
+        miliseconds: sectionTimestamp.startMiliseconds,
+        isTillTheEnd: false,
+      },
+      endsAt: {
+        hours: sectionTimestamp.endHours,
+        minutes: sectionTimestamp.endMinutes,
+        seconds: sectionTimestamp.endSeconds,
+        miliseconds: sectionTimestamp.endMiliseconds,
+        isTillTheEnd: false,
+      },
+    });
+  }, [
+    hasRegion,
+    title,
+    guildId,
+    operationId,
+    sectionTimestamp,
+    downloadMutation,
+  ]);
+
   return (
     <>
       <Container sx={{ mt: 5, mb: 2, textAlign: "center" }}>
@@ -464,7 +514,7 @@ function AudioWaveformEditor({
         }}
       >
         <Stack spacing={2} sx={{ textAlign: "center" }}>
-          <Typography variant="subtitle2" color="text.secondary">
+          <Typography variant="subtitle2" sx={{ color: (t) => t.col.text }}>
             Сохранить выделенный фрагмент
           </Typography>
 
@@ -571,26 +621,108 @@ function AudioWaveformEditor({
           </Stack>
 
           <Stack direction="column" spacing={2} sx={{ alignItems: "center" }}>
-            <Button
-              variant="contained"
-              onClick={handleUpload}
-              disabled={isUploading || !hasRegion || !guildId}
-              startIcon={
-                isUploading ? (
-                  <CircularProgress size={18} color="inherit" />
-                ) : (
-                  <CloudUploadIcon />
-                )
-              }
+            <Stack
+              direction="row"
+              spacing={2}
+              sx={{ flexWrap: "wrap", justifyContent: "center" }}
             >
-              {isUploading ? "Сохранение…" : "Сохранить"}
-            </Button>
+              <Tooltip
+                title="Добавить выделенный фрагмент в список треков для Дискорда"
+                arrow
+                slotProps={{
+                  arrow: {
+                    sx: {
+                      color: (t) => t.col.bg_600,
+                      "&:before": {
+                        border: "1px solid",
+                        borderColor: (t) => t.col.border_light,
+                      },
+                    },
+                  },
+                  tooltip: {
+                    sx: {
+                      maxWidth: "100%",
+                      backgroundColor: (t) => t.col.bg_600,
+                      color: (t) => t.col.text,
+                      border: "1px solid",
+                      borderColor: (t) => t.col.border_light,
+                    },
+                  },
+                }}
+              >
+                <Button
+                  variant="contained"
+                  onClick={handleUpload}
+                  disabled={isUploading || !hasRegion || !guildId}
+                  startIcon={
+                    isUploading ? (
+                      <CircularProgress size={18} color="inherit" />
+                    ) : (
+                      <CloudUploadIcon />
+                    )
+                  }
+                >
+                  {isUploading ? "Сохранение…" : "Сохранить"}
+                </Button>
+              </Tooltip>
+              <Tooltip
+                title="Скачать выделенный фрагмент"
+                arrow
+                slotProps={{
+                  arrow: {
+                    sx: {
+                      color: (t) => t.col.bg_600,
+                      "&:before": {
+                        border: "1px solid",
+                        borderColor: (t) => t.col.border_light,
+                      },
+                    },
+                  },
+                  tooltip: {
+                    sx: {
+                      backgroundColor: (t) => t.col.bg_600,
+                      color: (t) => t.col.text,
+                      border: "1px solid",
+                      borderColor: (t) => t.col.border_light,
+                    },
+                  },
+                }}
+              >
+                <Button
+                  variant="contained"
+                  onClick={handleDownloadFragment}
+                  disabled={
+                    isUploading ||
+                    downloadMutation.isPending ||
+                    !hasRegion ||
+                    !title.trim()
+                  }
+                  startIcon={
+                    downloadMutation.isPending ? (
+                      <CircularProgress size={18} color="inherit" />
+                    ) : (
+                      <DownloadIcon />
+                    )
+                  }
+                >
+                  {downloadMutation.isPending
+                    ? "Загрузка…"
+                    : "Скачать фрагмент"}
+                </Button>
+              </Tooltip>
+            </Stack>
+
+            {downloadMutation.isError && (
+              <Typography variant="caption" color="error" align="center">
+                Не удалось создать фрагмент. Попробуйте ещё раз.
+              </Typography>
+            )}
 
             {!hasRegion && (
               <Typography
                 variant="caption"
-                color="text.secondary"
                 align="center"
+                sx={{ color: (t) => t.col.text }}
               >
                 Выделите фрагмент на волне, чтобы сохранить его.
               </Typography>

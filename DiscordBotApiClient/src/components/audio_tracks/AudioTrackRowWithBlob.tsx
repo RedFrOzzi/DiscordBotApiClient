@@ -63,6 +63,7 @@ export function AudioTrackRowWithBlob({
     <AudioTrackRow
       title={track.title ?? "—"}
       url={url}
+      blob={blob}
       guilds={guilds}
       currentGuildId={track.guildId}
       onDelete={onDelete}

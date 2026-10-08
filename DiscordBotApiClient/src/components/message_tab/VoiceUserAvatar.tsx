@@ -29,7 +29,29 @@ export function VoiceUserAvatar({ user, muted, deafened }: Props) {
         width: "100%",
       }}
     >
-      <Tooltip title={displayName} arrow>
+      <Tooltip
+        title={displayName}
+        arrow
+        slotProps={{
+          arrow: {
+            sx: {
+              color: (t) => t.col.bg_600,
+              "&:before": {
+                border: "1px solid",
+                borderColor: (t) => t.col.border_light,
+              },
+            },
+          },
+          tooltip: {
+            sx: {
+              backgroundColor: (t) => t.col.bg_600,
+              color: (t) => t.col.text,
+              border: "1px solid",
+              borderColor: (t) => t.col.border_light,
+            },
+          },
+        }}
+      >
         <Avatar
           src={user.imageURL ?? undefined}
           sx={{
@@ -45,13 +67,57 @@ export function VoiceUserAvatar({ user, muted, deafened }: Props) {
       </Tooltip>
 
       {muted && (
-        <Tooltip title="Muted" arrow>
+        <Tooltip
+          title="Muted"
+          arrow
+          slotProps={{
+            arrow: {
+              sx: {
+                color: (t) => t.col.bg_600,
+                "&:before": {
+                  border: "1px solid",
+                  borderColor: (t) => t.col.border_light,
+                },
+              },
+            },
+            tooltip: {
+              sx: {
+                backgroundColor: (t) => t.col.bg_600,
+                color: (t) => t.col.text,
+                border: "1px solid",
+                borderColor: (t) => t.col.border_light,
+              },
+            },
+          }}
+        >
           <MicOffIcon sx={{ fontSize: 18, color: "#e5484d" }} />
         </Tooltip>
       )}
 
       {deafened && (
-        <Tooltip title="Deafened" arrow>
+        <Tooltip
+          title="Deafened"
+          arrow
+          slotProps={{
+            arrow: {
+              sx: {
+                color: (t) => t.col.bg_600,
+                "&:before": {
+                  border: "1px solid",
+                  borderColor: (t) => t.col.border_light,
+                },
+              },
+            },
+            tooltip: {
+              sx: {
+                backgroundColor: (t) => t.col.bg_600,
+                color: (t) => t.col.text,
+                border: "1px solid",
+                borderColor: (t) => t.col.border_light,
+              },
+            },
+          }}
+        >
           <HeadsetOffIcon sx={{ fontSize: 18, color: "#e5484d" }} />
         </Tooltip>
       )}

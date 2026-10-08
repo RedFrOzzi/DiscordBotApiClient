@@ -420,22 +420,23 @@ export function MessagingTab() {
             pl: 2,
             "& .MuiToggleButton-root": {
               textTransform: "none",
-              backgroundColor: `${theme.col.bg_600}`,
+              backgroundColor: theme.col.bg_700,
               color: `${theme.col.text}80`,
-              borderColor: `${theme.col.border_light}`,
+              borderColor: theme.col.border_light,
               "&:hover": {
-                bgcolor: `${theme.col.bg_700}`,
+                bgcolor: theme.col.bg_800,
               },
               "&.Mui-disabled": {
-                bgcolor: "transparent",
-                borderColor: `${theme.col.border}`,
+                color: `${theme.col.text}25`,
+                bgcolor: theme.col.bg_200,
+                borderColor: theme.col.border_light,
               },
               "&.Mui-selected": {
-                bgcolor: `${theme.col.bg_800}70`,
-                color: `${theme.col.text}`,
-                borderColor: `${theme.col.border_light}`,
+                bgcolor: theme.col.bg_900,
+                color: theme.col.text,
+                borderColor: theme.col.border_light,
                 "&:hover": {
-                  bgcolor: `${theme.col.bg_800}`,
+                  bgcolor: theme.col.bg_900,
                 },
               },
             },
