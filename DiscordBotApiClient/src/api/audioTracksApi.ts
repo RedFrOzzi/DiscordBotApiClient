@@ -77,4 +77,16 @@ export const audioTracksApi = {
       body: form,
     });
   },
+
+  playOnDiscord: (key: number, guildId: string) =>
+    apiFetch<void>(
+      `/audio-tracks/${key}/play?guildId=${encodeURIComponent(guildId)}`,
+      { method: "POST" },
+    ),
+
+  stopOnDiscord: (guildId: string) =>
+    apiFetch<void>(
+      `/audio-tracks/stop?guildId=${encodeURIComponent(guildId)}`,
+      { method: "POST" },
+    ),
 };

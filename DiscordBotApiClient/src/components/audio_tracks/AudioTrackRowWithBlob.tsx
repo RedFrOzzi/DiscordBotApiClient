@@ -12,6 +12,7 @@ type Props = {
   onDelete?: () => void;
   onRename?: () => void;
   onShare?: (targetGuildId: string) => void;
+  onDiscordAction?: (kind: "success" | "error", text: string) => void;
 };
 
 export function AudioTrackRowWithBlob({
@@ -20,6 +21,7 @@ export function AudioTrackRowWithBlob({
   onDelete,
   onRename,
   onShare,
+  onDiscordAction,
 }: Props) {
   const {
     data: blob,
@@ -65,10 +67,12 @@ export function AudioTrackRowWithBlob({
       url={url}
       blob={blob}
       guilds={guilds}
+      trackKey={track.key}
       currentGuildId={track.guildId}
       onDelete={onDelete}
       onRename={onRename}
       onShare={onShare}
+      onDiscordAction={onDiscordAction}
     />
   );
 }
@@ -89,7 +93,7 @@ function TrackRowShell({ children }: { children: React.ReactNode }) {
         fontSize: 13,
       }}
     >
-      <Typography variant="body2" color="text.secondary" noWrap>
+      <Typography variant="body2" sx={{ color: (t) => t.col.text }} noWrap>
         {children}
       </Typography>
     </Box>

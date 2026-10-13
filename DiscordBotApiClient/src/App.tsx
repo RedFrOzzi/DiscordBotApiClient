@@ -11,6 +11,7 @@ import { Typography } from "@mui/material";
 import { GuildsTab } from "./components/guilds/GuildsTab";
 import { MessagingTab } from "./components/message_tab/MessagingTab";
 import { AudioTracksTab } from "./components/audio_tracks/AudioTracksTab";
+import { LogsTab } from "./components/logs/LogsTab";
 
 function App() {
   const [tab, setTab] = useState("home");
@@ -19,16 +20,15 @@ function App() {
   const canSeeAdmin = isAdmin || isModerator;
 
   useEffect(() => {
-    if (!canSeeAdmin && tab === "admin") {
+    if (canSeeAdmin && tab === "home") {
       setTab("message");
     }
   }, [canSeeAdmin, tab]);
 
   useEffect(() => {
-    if (canSeeAdmin && tab === "home") {
-      setTab("message");
-    }
-  }, [canSeeAdmin, tab]);
+    if (!canSeeAdmin && tab === "admin") setTab("message");
+    if (!isAdmin && tab === "logs") setTab("message");
+  }, [canSeeAdmin, isAdmin, tab]);
 
   const handleChange = (
     _event: React.SyntheticEvent<Element, Event>,
@@ -81,6 +81,7 @@ function App() {
               <Tab value={"audio-tracks"} label="Аудио треки" />
               <Tab value={"guilds"} label="Каналы" />
               <Tab value={"admin"} label="Управление" />
+              {isAdmin && <Tab value="logs" label="Логи" />}
             </Tabs>
           )}
           <Box sx={{ pr: 5, justifySelf: "end" }}>
@@ -121,6 +122,7 @@ function App() {
         {tab === "audio-tracks" && <AudioTracksTab />}
         {tab === "guilds" && <GuildsTab />}
         {tab === "admin" && <AdminDashboard />}
+        {tab === "logs" && isAdmin && <LogsTab />}
       </Box>
     </div>
   );

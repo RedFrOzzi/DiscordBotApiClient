@@ -32,6 +32,8 @@ import IconButton from "@mui/material/IconButton";
 import { useMemo } from "react";
 import { fuzzyMatch } from "./fuzzyMatch";
 
+const TRACK_ROW_WIDTH = "650px";
+
 export function AudioTracksTab() {
   const {
     guilds,
@@ -430,7 +432,7 @@ export function AudioTracksTab() {
             sx={{
               flex: 1,
               minHeight: 0,
-              width: "550px",
+              width: TRACK_ROW_WIDTH,
               overflowY: "auto",
               p: 2,
             }}
@@ -454,7 +456,7 @@ export function AudioTracksTab() {
               </Box>
             ) : filteredTracks.length === 0 ? (
               <Box sx={{ py: 6, textAlign: "center" }}>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" sx={{ color: (t) => t.col.text }}>
                   Ничего не найдено по запросу «{search}».
                 </Typography>
               </Box>
@@ -472,6 +474,9 @@ export function AudioTracksTab() {
                         key: t.key,
                         guildId: targetGuildId,
                       })
+                    }
+                    onDiscordAction={(kind, text) =>
+                      setFeedback({ kind, text })
                     }
                   />
                 ))}
