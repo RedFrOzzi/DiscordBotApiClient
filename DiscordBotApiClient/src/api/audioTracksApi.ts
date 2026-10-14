@@ -35,6 +35,15 @@ export type DeleteAudioTrackDto = {
   title: string;
 };
 
+export type PanelTheme = 0 | 1 | 2 | 3;
+
+export const PANEL_THEMES: Array<{ value: PanelTheme; label: string }> = [
+  { value: 0, label: "Стандарт" },
+  { value: 1, label: "Чередующиеся" },
+  { value: 2, label: "Радуга" },
+  { value: 3, label: "Хаос" },
+];
+
 export const audioTracksApi = {
   getByGuild: (guildId: string, bust?: number) =>
     apiFetch<AudioTrackDto[]>(
@@ -87,6 +96,14 @@ export const audioTracksApi = {
   stopOnDiscord: (guildId: string) =>
     apiFetch<void>(
       `/audio-tracks/stop?guildId=${encodeURIComponent(guildId)}`,
+      { method: "POST" },
+    ),
+
+  setPanelTheme: (guildId: string, theme: PanelTheme) =>
+    apiFetch<void>(
+      `/audio-tracks/theme?guildId=${encodeURIComponent(
+        guildId,
+      )}&theme=${theme}`,
       { method: "POST" },
     ),
 };

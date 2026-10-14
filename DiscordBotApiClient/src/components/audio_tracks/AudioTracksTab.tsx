@@ -24,13 +24,15 @@ import { UploadAudioTrackDialog } from "./UploadAudioTrackDialog";
 import { RenameAudioTrackDialog } from "./RenameAudioTrackDialog";
 import type { AudioTrackDto } from "../../api/audioTracksApi";
 import { DeleteAudioTrackDialog } from "./DeleteAudioTrackDialog";
-import { audioTracksApi } from "../../api/audioTracksApi";
+import { audioTracksApi, PANEL_THEMES } from "../../api/audioTracksApi";
 import { ApiError } from "../../api/ApiError";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import IconButton from "@mui/material/IconButton";
 import { useMemo } from "react";
 import { fuzzyMatch } from "./fuzzyMatch";
+import PaletteIcon from "@mui/icons-material/Palette";
+import { PanelThemeDialog } from "./PanelThemeDialog";
 
 const TRACK_ROW_WIDTH = "650px";
 
@@ -58,6 +60,7 @@ export function AudioTracksTab() {
     kind: "success" | "error";
     text: string;
   } | null>(null);
+  const [themeDialogOpen, setThemeDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!guildId && guilds.length > 0 && guilds[0].id) {
@@ -254,6 +257,52 @@ export function AudioTracksTab() {
         </Tooltip>
 
         <Box sx={{ flex: 1 }} />
+
+        <Tooltip
+          arrow
+          title="Сменить цветовую тему кнопок аудио панели в дискорде"
+          slotProps={{
+            arrow: {
+              sx: {
+                color: (t) => t.col.bg_600,
+                "&:before": {
+                  border: "1px solid",
+                  borderColor: (t) => t.col.border_light,
+                },
+              },
+            },
+            tooltip: {
+              sx: {
+                textWrap: "nowrap",
+                maxWidth: "none",
+                backgroundColor: (t) => t.col.bg_600,
+                color: (t) => t.col.text,
+                border: "1px solid",
+                borderColor: (t) => t.col.border_light,
+              },
+            },
+          }}
+        >
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<PaletteIcon />}
+            disabled={!guildId}
+            onClick={() => setThemeDialogOpen(true)}
+            sx={{
+              color: (t) => t.col.text,
+              backgroundColor: (t) => t.col.bg_500,
+              borderColor: (t) => `${t.col.border_light}90`,
+              "&:hover": {
+                borderColor: (t) => t.col.border_light,
+                bgcolor: (t) => `${t.col.bg_700}`,
+              },
+            }}
+          >
+            Тема
+          </Button>
+        </Tooltip>
+
         <Tooltip
           arrow
           title="Создать панель аудиотреков в дискорде"
@@ -517,6 +566,21 @@ export function AudioTracksTab() {
         trackTitle={trackToDelete?.title ?? ""}
         guildId={guildId}
         onClose={() => setTrackToDelete(null)}
+      />
+
+      <PanelThemeDialog
+        open={themeDialogOpen}
+        guildId={guildId}
+        guildName={selectedGuild?.name ?? null}
+        onClose={() => setThemeDialogOpen(false)}
+        onSuccess={(t) => {
+          const label =
+            PANEL_THEMES.find((x) => x.value === t)?.label ?? "тема";
+          setFeedback({
+            kind: "success",
+            text: `Тема изменена на «${label}».`,
+          });
+        }}
       />
 
       <Snackbar
